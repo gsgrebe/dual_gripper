@@ -1,0 +1,48 @@
+<!-- -*- mode: XML -*- -->
+
+<launch>
+
+    <node name="dynamixel_manager" pkg="dynamixel_controllers" type="controller_manager.py" required="true" output="screen">
+        <rosparam>
+            namespace: dxl_manager
+            serial_ports:
+                left_hand_port:
+                    port_name: "/dev/ttyUSB0"
+                    baud_rate: 57142
+                    min_motor_id: 1
+                    max_motor_id: 4
+                    update_rate: 20
+                right_hand_port:
+                    port_name: "/dev/ttyUSB1"
+                    baud_rate: 57142
+                    min_motor_id: 1
+                    max_motor_id: 4
+                    update_rate: 20
+        </rosparam>
+    </node>
+
+    <rosparam file="$(find dual_gripper)/yaml/dual_gripper.yaml" command="load"/>
+    <rosparam file="$(find dual_gripper)/yaml/dual_gripper_left_zero_points.yaml" command="load"/>
+    <rosparam file="$(find dual_gripper)/yaml/dual_gripper_right_zero_points.yaml" command="load"/>
+
+    <node name="left_hand_controller_spawner" pkg="dynamixel_controllers" type="controller_spawner.py"
+          args="--manager=dxl_manager
+                --port left_hand_port 
+                	dual_gripper_left_f1 
+                	dual_gripper_left_f2 
+                	dual_gripper_left_f3 
+                	dual_gripper_left_preshape
+                "
+          output="screen"/>
+    
+    <node name="right_hand_controller_spawner" pkg="dynamixel_controllers" type="controller_spawner.py"
+          args="--manager=dxl_manager
+                --port right_hand_port 
+                	dual_gripper_right_f1 
+                	dual_gripper_right_f2 
+                	dual_gripper_right_f3 
+                	dual_gripper_right_preshape
+                "
+          output="screen"/>      
+
+</launch>
