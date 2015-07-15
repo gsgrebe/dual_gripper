@@ -4,6 +4,7 @@
 #
 
 from os.path import join
+import sys
 import yaml
 
 from dynamixel_msgs.msg import JointState
@@ -11,33 +12,39 @@ import rospy
 import rospkg
 from std_msgs.msg import Float64
 
-from dual_gripper.msg import Pose
+from gripper.msg import Pose
 from motor import Motor
 
 
 class ReflexSFHand(object):
-    def __init__(self,whichHand):
-        self.id = whichHand
-        nodeName = 'dual_gripper_' + self.id
+    def __init__(self,name):
+        self.name = name
+        nodeName = 'gripper_' + self.name
+                
         rospy.init_node(nodeName)
-        rospy.loginfo('Starting up the ReFlex SF ' + self.id +' hand')
-        self.motors = {'/dual_gripper_'+self.id+'_f1': Motor('/dual_gripper_'+self.id+'_f1'),
-                       '/dual_gripper_'+self.id+'_f2': Motor('/dual_gripper_'+self.id+'_f2'),
-                       '/dual_gripper_'+self.id+'_f3': Motor('/dual_gripper_'+self.id+'_f3'),
-                       '/dual_gripper_'+self.id+'_preshape': Motor('/dual_gripper_'+self.id+'_preshape')}
-        rospy.Subscriber('/dual_gripper_'+self.id+'/command', Pose, self.receiveCmdCb)
-        rospy.loginfo('ReFlex SF '+self.id+' hand has started, waiting for commands...')
+        rospy.loginfo('Starting up the ReFlex SF Hand \'%s\''%self.name)
+
+        self.fingers = ['f1', 'f2', 'f3', 'preshape']
+        
+        motorNS = ['/%s_%s'%(nodeName,finger) for finger in self._fingers]
+        self.motors = { motor: Motor(motor) for motor in motorNS}
+        
+        rospy.Subscriber('/%s/command'%(nodeName), Pose, self.receiveCmdCb)
+        rospy.loginfo('ReFlex SF Hand \'%s\' has started, waiting for commands...'%self.name)
 
     def receiveCmdCb(self, data):
-        self.motors['/dual_gripper_'+self.id+'_f1'].setMotorPosition(data.f1)
-        self.motors['/dual_gripper_'+self.id+'_f2'].setMotorPosition(data.f2)
-        self.motors['/dual_gripper_'+self.id+'_f3'].setMotorPosition(data.f3)
-        self.motors['/dual_gripper_'+self.id+'_preshape'].setMotorPosition(data.preshape)
+        self.motors['/gripper_'+self.name+'_f1'].setMotorPosition(data.f1)
+        self.motors['/gripper_'+self.name+'_f2'].setMotorPosition(data.f2)
+        self.motors['/gripper_'+self.name+'_f3'].setMotorPosition(data.f3)
+        self.motors['/gripper_'+self.name+'_preshape'].setMotorPosition(data.preshape)
 
     def printMotorPositions(self):
         print ""  # visually separates following print messages in the flow
         for motor in sorted(self.motors):
             print motor, " position: ", self.motors[motor].getCurrentPosition()
+
+    def getMotorPositions(self):
+        return [self.motors[motor].getCurrentPosition() for motor in sorted(self.motors)]
 
     def calibrate(self):
         for motor in sorted(self.motors):
@@ -62,23 +69,22 @@ motor, or 'q' to indicate that the zero point has been reached\n")
 
     def writeZeroPointDataToFile(self, filename, data):
         rospack = rospkg.RosPack()
-        dual_gripper_path = rospack.get_path("dual_gripper")
+        gripper_path = rospack.get_path("gripper")
         yaml_path = "yaml"
-        file_path = join(dual_gripper_path, yaml_path, filename)
+        file_path = join(gripper_path, yaml_path, filename)
         with open(file_path, "w") as outfile:
             outfile.write(yaml.dump(data))
 
     def writeCurrentPositionsToZero(self):
-        keys = [('dual_gripper_'+self.id+'_f1'),
-                ('dual_gripper_'+self.id+'_f2'),
-                ('dual_gripper_'+self.id+'_f3'),
-                ('dual_gripper_'+self.id+'_preshape')]
-        data = {}
-        for key in keys:
-            data[key] = dict(
-                zero_point = self.motors['/'+key].getRawCurrentPosition()
-            )
-        self.writeZeroPointDataToFile('dual_gripper_'+self.id+'_zero_points.yaml', data)
+        keys = [('gripper_'+self.name+'_f1'),
+                ('gripper_'+self.name+'_f2'),
+                ('gripper_'+self.name+'_f3'),
+                ('gripper_'+self.name+'_preshape')]
+        data = { key : dict(
+            zero_point = self.motors['/'+key].getRawCurrentPosition() )
+            for key in keys}
+        
+        self.writeZeroPointDataToFile('gripper_'+self.name+'_zero_points.yaml', data)
 
     def disableTorque(self):
         for motor in self.motors:
@@ -89,14 +95,8 @@ motor, or 'q' to indicate that the zero point has been reached\n")
             self.motors[motor].enableTorque()
 
 
-def main():
-    args = rospy.myargv()
-    if len(args) > 2:
-        print "Too Many Arguments Specified"
-    if len(args) == 2:
-        name = args[1]
-    else:
-        name = args[0]
+def main(argv):
+    name = argv[0]
 
     if (name.find("/")!=-1 or name.find("\\")!=-1):
         print "Invalid name: " + name
@@ -108,4 +108,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1:])

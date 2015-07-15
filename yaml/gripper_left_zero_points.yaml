@@ -1,0 +1,4 @@
+dual_gripper_left_f1: {zero_point: 3.164602365408078}
+dual_gripper_left_f2: {zero_point: 3.098641191528995}
+dual_gripper_left_f3: {zero_point: 0.07363107781851078}
+dual_gripper_left_preshape: {zero_point: 2.179786699585496}
