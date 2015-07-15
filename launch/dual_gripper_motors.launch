@@ -1,19 +1,21 @@
 <!-- -*- mode: XML -*- -->
 
 <launch>
-
+    <arg name="leftPort" default="/dev/ttyUSB0"/>
+    <arg name="rightPort" default="/dev/ttyUSB1"/>
+    
     <node name="dynamixel_manager" pkg="dynamixel_controllers" type="controller_manager.py" required="true" output="screen">
-        <rosparam>
+        <rosparam subst_value = "True">
             namespace: dxl_manager
             serial_ports:
                 left_hand_port:
-                    port_name: "/dev/ttyUSB0"
+                    port_name: $(arg leftPort)
                     baud_rate: 57142
                     min_motor_id: 1
                     max_motor_id: 4
                     update_rate: 20
                 right_hand_port:
-                    port_name: "/dev/ttyUSB1"
+                    port_name: $(arg rightPort)
                     baud_rate: 57142
                     min_motor_id: 1
                     max_motor_id: 4

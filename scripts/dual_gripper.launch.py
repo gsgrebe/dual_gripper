@@ -3,6 +3,7 @@
 import rospy
 import subprocess
 import time
+import os
 
 def main():
 	# make sure core is running 
@@ -14,10 +15,17 @@ def main():
 		print "(Process will open in a new window)"
 		subprocess.call(['gnome-terminal', '-e', "bash -c \"roscore\""])
 
+	leftPath = raw_input("Path to LEFT hand (e.g. /dev/ttyUSB0) ==> ")
+	rightPath = raw_input("Path to RIGHT hand (e.g. /dev/ttyUSB1) ==> ")
+		
+
 	print "Starting the services for each motor..."
 	print "(Process will open in a new window)"
 	# run the first launch file in a new terminal
-	subprocess.call(['gnome-terminal', "-e", "bash -c \"roslaunch dual_gripper dual_gripper_motors.launch\""])
+	full_command = "\"roslaunch dual_gripper dual_gripper_motors.launch"
+	full_command += " leftPort:=" + leftPath
+	full_command += " rightPort:=" + rightPath +"\""
+	subprocess.call(['gnome-terminal', "-e", "bash -c " + full_command])
 	
 	# wait a few seconds for this to finish
 	time.sleep(5)
