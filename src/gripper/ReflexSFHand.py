@@ -26,7 +26,7 @@ class ReflexSFHand(object):
 
         self.fingers = ['f1', 'f2', 'f3', 'preshape']
         
-        motorNS = ['/%s_%s'%(nodeName,finger) for finger in self._fingers]
+        motorNS = ['/%s_%s'%(nodeName,finger) for finger in self.fingers]
         self.motors = { motor: Motor(motor) for motor in motorNS}
         
         rospy.Subscriber('/%s/command'%(nodeName), Pose, self.receiveCmdCb)
