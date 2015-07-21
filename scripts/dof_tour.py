@@ -2,13 +2,13 @@
 
 import rospy
  
-from dual_gripper.msg import Pose
+from gripper.msg import Pose
  
 def dofTour():
 
-	leftPub = rospy.Publisher('/dual_gripper_left/command', Pose, queue_size=10)
-	rightPub = rospy.Publisher('/dual_gripper_right/command', Pose, queue_size=10)
-	rospy.init_node('dual_gripper_dof_tour')
+	leftPub = rospy.Publisher('/gripper_left/command', Pose, queue_size=10)
+	rightPub = rospy.Publisher('/gripper_right/command', Pose, queue_size=10)
+	rospy.init_node('gripper_dof_tour')
 
 	FINGER_CLOSED = 4.6
 	FINGER_PINCH = 3.5 
