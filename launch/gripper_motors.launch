@@ -1,21 +1,19 @@
 <!-- -*- mode: XML -*- -->
 
 <launch>
-    <arg name="leftPort" default="/dev/ttyUSB0"/>
-    <arg name="rightPort" default="/dev/ttyUSB1"/>
-    
-    <node name="dynamixel_manager" pkg="dynamixel_controllers" type="controller_manager.py" required="true" output="screen">
-        <rosparam subst_value = "True">
+    <arg name="Name" />
+    <arg name="Port" default="/dev/ttyUSB0"/>
+    <!--arg name="test" />
+
+    <rosparam param="test" subst_value="true">"$(arg test)"</rosparam-->
+
+    <!-- Start the dynamixel manager on the given port -->
+    <node name="dynamixel_manager_$(arg Name)" pkg="dynamixel_controllers" type="controller_manager.py" required="true" output="screen">
+        <rosparam subst_value = "true">
             namespace: dxl_manager
             serial_ports:
-                left_hand_port:
-                    port_name: $(arg leftPort)
-                    baud_rate: 57142
-                    min_motor_id: 1
-                    max_motor_id: 4
-                    update_rate: 20
-                right_hand_port:
-                    port_name: $(arg rightPort)
+                $(arg Name)_port:
+                    port_name: $(arg Port)
                     baud_rate: 57142
                     min_motor_id: 1
                     max_motor_id: 4
@@ -23,28 +21,20 @@
         </rosparam>
     </node>
 
-    <rosparam file="$(find dual_gripper)/yaml/dual_gripper.yaml" command="load"/>
-    <rosparam file="$(find dual_gripper)/yaml/dual_gripper_left_zero_points.yaml" command="load"/>
-    <rosparam file="$(find dual_gripper)/yaml/dual_gripper_right_zero_points.yaml" command="load"/>
-
-    <node name="left_hand_controller_spawner" pkg="dynamixel_controllers" type="controller_spawner.py"
-          args="--manager=dxl_manager
-                --port left_hand_port 
-                	dual_gripper_left_f1 
-                	dual_gripper_left_f2 
-                	dual_gripper_left_f3 
-                	dual_gripper_left_preshape
-                "
-          output="screen"/>
+    <!--Set all of the necessary params for the hand -->
+    <include file="$(find gripper)/launch/params.launch">
+        <arg name="Name" value="$(arg Name)"/>
+    </include>
     
-    <node name="right_hand_controller_spawner" pkg="dynamixel_controllers" type="controller_spawner.py"
+    <!-- Spawn the controllers for each finger-->
+    <node name="controller_spawner_$(arg Name)" pkg="dynamixel_controllers" type="controller_spawner.py"
           args="--manager=dxl_manager
-                --port right_hand_port 
-                	dual_gripper_right_f1 
-                	dual_gripper_right_f2 
-                	dual_gripper_right_f3 
-                	dual_gripper_right_preshape
+                --port $(arg Name)_port 
+                	gripper_$(arg Name)_f1 
+                	gripper_$(arg Name)_f2 
+                	gripper_$(arg Name)_f3 
+                	gripper_$(arg Name)_preshape
                 "
-          output="screen"/>      
+          output="screen"/>   
 
 </launch>

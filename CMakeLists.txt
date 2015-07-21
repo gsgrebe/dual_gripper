@@ -145,7 +145,7 @@ install(
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 install(FILES
-    launch/dual_gripper_motors.launch
+    launch/gripper_motors.launch
     DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
